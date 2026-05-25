@@ -18,15 +18,14 @@
   <div id="results"></div>
 
   <script>
-    // --- PEGA TU LINK DE CLOUDFLARE AQUÍ (sin barra al final) ---
-    const MI_PUENTE_PRIVADO = 'dawn-moon-94a0.loveandpainsports.workers.dev';
+    // Fíjate que ahora tiene el https:// al principio. ¡No lo borres!
+    const MI_PUENTE_PRIVADO = 'https://dawn-moon-94a0.loveandpainsports.workers.dev';
 
     async function fetchLeaderboard() {
       const status = document.getElementById('status');
       status.textContent = 'Conectando por el servidor VIP de Sky Mavis...';
 
       try {
-        // Usamos el enlace directo REST para Leaderboards
         const response = await fetch(MI_PUENTE_PRIVADO + '/origins/v2/season-leaderboards?limit=10', {
           method: 'GET'
         });
