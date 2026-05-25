@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Axie Leaderboard Pro</title>
+<style>
+  body { background: #0a0e1a; color: #c9d6df; font-family: monospace; padding: 20px; }
+  .rank-card { background: #0d1b2a; border: 1px solid #1e3a5f; padding: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 20px; border-radius: 8px; }
+  .rank-num { color: #ffd700; font-size: 1.5rem; font-weight: bold; width: 50px; }
+  .axie-img { width: 60px; height: 60px; background: #111827; border: 1px solid #1e3a5f; border-radius: 4px; object-fit: contain; }
+  button { padding: 12px 24px; background: #00d4ff; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; color: #000; }
+</style>
+</head>
+<body>
+
+  <h1>Ranking Real (Vía Puente Privado)</h1>
+  <button onclick="fetchLeaderboard()">CARGAR RANKING</button>
+  <div id="status" style="margin: 15px 0; color: #ff6b35;"></div>
+  <div id="results"></div>
+
+  <script>
+    // --- AQUÍ PEGAS TU DIRECCIÓN DE CLOUDFLARE ---
+    const MI_PUENTE_PRIVADO = 'https://aged-frost-eba3.loveandpainsports.workers.dev/';
+
+    async function fetchLeaderboard() {
+      const status = document.getElementById('status');
+      status.textContent = 'Conectando con el puente...';
+
+      const query = `query GetLeaderboard {
+        leaderboard(mode: origins, offset: 0, limit: 10) {
+          items {
+            name
+            rank
+            score
+            team {
+              axies {
+                id
+                image
+              }
+            }
+          }
+        }
+      }`;
+
+      try {
+        const response = await fetch(MI_PUENTE_PRIVADO, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: query })
+        });
+
+        const rawText = await response.text();
+        console.log("Respuesta cruda del servidor:", rawText); // Para diagnóstico
+
+        const json = JSON.parse(rawText);
+        
+        if (json.errors) {
+          status.textContent = 'Error de API: ' + json.errors[0].message;
+          return;
+        }
+
+        const players = json.data.leaderboard.items;
+        let html = '';
+
+        players.forEach(p => {
+          let axiesHtml = '';
+          if (p.team && p.team.axies) {
+            p.team.axies.forEach(a => {
+              axiesHtml += `<img class="axie-img" src="${a.image}">`;
+            });
+          }
+          html += `
+            <div class="rank-card">
+              <div class="rank-num">#${p.rank}</div>
+              <div><strong>${p.name || 'Sin nombre'}</strong><br>MMR: ${p.score}</div>
+              <div style="display:flex; gap:5px;">${axiesHtml}</div>
+            </div>`;
+        });
+
+        document.getElementById('results').innerHTML = html;
+        status.textContent = 'Ranking cargado.';
+      } catch (e) {
+        status.textContent = 'Error: ' + e.message + '. Revisa la consola (F12).';
+      }
+    }
+  </script>
+</body>
+</html>
